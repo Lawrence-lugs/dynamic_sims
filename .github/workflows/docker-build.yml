@@ -1,0 +1,47 @@
+name: Build Container Test
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Dockerfile'
+      - 'environment.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Dockerfile'
+      - 'environment.yml'
+  workflow_dispatch:
+
+env:
+  # Define a temporary tag for the build
+  IMAGE_TAG: local-build-test:latest
+
+jobs:
+  build-only:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Only needs read permission
+
+    steps:
+      - name: ⬇️ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false 
+          tags: ${{ env.IMAGE_TAG }}
+          # Pass the build argument for the non-root user
+          build-args: |
+            USERNAME=devuser
+
+      - name: 🧹 Clean up (Remove locally built image)
+        # We run a cleanup step to remove the image from the runner's disk after the build test is complete.
+        if: always()
+        run: |
+          docker rmi ${{ env.IMAGE_TAG }} || true
