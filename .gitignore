@@ -1,2 +1,9 @@
 # All outputs should be reproducible after clone
 outputs/
+
+# Remove user projects since this is a template repo
+# projects/
+
+__pycache__/
+
+RCManim/media
